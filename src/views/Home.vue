@@ -11,10 +11,12 @@
       Upload files
     </button>-->
 
-    <v-toolbar color="cyan" dark tabs>
-      <v-toolbar-side-icon></v-toolbar-side-icon>
+    <v-toolbar color="cyan" dark>
+      <!-- <v-toolbar-side-icon></v-toolbar-side-icon> -->
 
-      <v-toolbar-title>Cloudinary Uploader</v-toolbar-title>
+      <v-toolbar-title class="justify-center"
+        >Cloudinary Uploader</v-toolbar-title
+      >
 
       <v-spacer></v-spacer>
 
@@ -27,15 +29,17 @@
       </v-btn>
     </v-toolbar>
 
-    <v-card flat>
+    <v-card flat class="mb-3">
       <v-card-text>
         <v-spacer></v-spacer>
         <!--<v-c-uploader v-model="text" upload-preset="tm4w6luq" cloud-name="rootless"></v-c-uploader>-->
-        <uppy-cloudinary-uploader
-          @uploaded="uploadCompleted"
-          preset="tm4w6luq"
-          cloudName="rootless"
-        ></uppy-cloudinary-uploader>
+        <v-flex text-center
+          ><uppy-cloudinary-uploader
+            @uploaded="uploadCompleted"
+            preset="tm4w6luq"
+            cloudName="rootless"
+          ></uppy-cloudinary-uploader
+        ></v-flex>
       </v-card-text>
     </v-card>
   </div>
@@ -52,6 +56,11 @@ export default {
   components: {
     // HelloWorld
     UppyCloudinaryUploader
+  },
+  methods: {
+    uploadCompleted(data: string) {
+      console.log(data);
+    }
   },
   computed: {
     // cloudinarySync() {

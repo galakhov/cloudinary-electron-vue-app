@@ -5,16 +5,26 @@
   </button>
 </template>
 
+<style lang="scss">
+// @import "@/../node_modules/@uppy/core/dist/style.css";
+// @import "@/../node_modules/@uppy/dashboard/dist/style.css";
+</style>
+
 <script>
 // import Uppy from 'uppy/lib/core';
 import Uppy from "@uppy/core";
-// import Dashboard from 'uppy/lib/plugins/Dashboard';
+import XHRUpload from "@uppy/xhr-upload";
 import Dashboard from "@uppy/dashboard";
-// import Webcam from 'uppy/lib/plugins/Webcam';
+import ProgressBar from "@uppy/progress-bar";
+import StatusBar from "@uppy/status-bar";
+import Informer from "@uppy/informer";
+import "@uppy/core/src/style.scss";
+import "@uppy/dashboard/src/style.scss";
+import "@uppy/progress-bar/src/style.scss";
+import "@uppy/status-bar/src/style.scss";
+import "@uppy/informer/src/style.scss";
+import { log } from "util";
 // import Webcam from '@uppy/webcam';
-/* eslint-disable no-unused-vars */
-import "./vue-uppy-cloudinary.css";
-// import 'uppy/dist/uppy.min.css';
 
 const BASE_URL = "https://api.cloudinary.com/v1_1/";
 const IMAGE_POSTFIX = "/image/upload";
@@ -111,11 +121,12 @@ export default {
 
       xhr.upload.addEventListener("progress", ev => {
         if (ev.lengthComputable) {
+          console.log("ev: " + ev);
           const progressData = {
             uploader: this,
             id: file.id,
             bytesUploaded: ev.loaded,
-            bytesTotal: ev.total
+            bytesTotal: ev.total || 0
           };
           this.uppy.emit("upload-progress", progressData);
           this.$emit("upload-progress", progressData);
@@ -146,6 +157,19 @@ export default {
             showProgressDetails: this.showProgressDetails,
             closeModalOnClickOutside: this.closeModalOnClickOutside
           })
+          .use(XHRUpload, {
+            endpoint: "https://api.cloudinary.com/v1_1/rootless/upload"
+            //'https://api2.transloadit.com'
+          })
+          .use(ProgressBar, {
+            // Options
+          })
+          .use(StatusBar, {
+            // Options
+          })
+          .use(Informer, {
+            // Options
+          })
           // .use(Webcam, {
           //   target: Dashboard,
           // })
@@ -175,7 +199,7 @@ export default {
 .uploader {
   text-decoration: none;
   color: #fff;
-  background-color: cyan;
+  background-color: lightblue;
   text-align: center;
   letter-spacing: 0.5px;
   -webkit-transition: 0.2s ease-out;

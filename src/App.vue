@@ -1,6 +1,6 @@
 <template>
-  <v-app>
-    <v-content>
+  <v-app id="inspire">
+    <v-content class="pa-5">
       <Home />
     </v-content>
   </v-app>
