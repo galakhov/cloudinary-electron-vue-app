@@ -1,1 +1,0 @@
-# cloudinary-electron-vue-app
