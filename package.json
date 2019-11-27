@@ -13,6 +13,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "cloudinary-vue": "^1.0.0-beta3",
     "core-js": "^3.3.2",
     "vue": "^2.6.10",
     "vue-class-component": "^7.0.2",
@@ -37,6 +38,7 @@
     "prettier": "^1.18.2",
     "sass-loader": "^8.0.0",
     "typescript": "~3.5.3",
+    "vue-cli-plugin-cloudinary": "0.0.5",
     "vue-cli-plugin-electron-builder": "^1.4.2",
     "vue-template-compiler": "^2.6.10"
   }
