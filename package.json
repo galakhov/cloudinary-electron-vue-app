@@ -5,7 +5,7 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
+    "lint": "vue-cli-service lint --fix",
     "electron:build": "vue-cli-service electron:build",
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
@@ -13,6 +13,8 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@uppy/core": "^1.6.0",
+    "@uppy/dashboard": "^1.5.0",
     "cloudinary-vue": "^1.0.0-beta3",
     "core-js": "^3.3.2",
     "vue": "^2.6.10",

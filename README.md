@@ -27,5 +27,7 @@ npm run lint
 ### Customize configuration
 
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
 [Cloudinary Vue SDK Plugin for Vue CLI](https://github.com/cloudinary/vue-cli-plugin-cloudinary).
+
 [Tutorial and examples on integration into a vue app](https://cloudinary.com/documentation/vue_integration).
