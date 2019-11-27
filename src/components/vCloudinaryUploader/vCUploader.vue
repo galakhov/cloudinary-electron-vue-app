@@ -19,7 +19,7 @@
       ref="uploadInput"
       :multiple="false"
       @change="uploadFiles($event)"
-    >
+    />
     <!-- Progress -->
     <v-progress-circular
       v-if="uploading"
@@ -28,12 +28,15 @@
       :rotate="360"
       :value="progress"
       :color="progressColor"
-    >{{progress}}%</v-progress-circular>
+      >{{ progress }}%</v-progress-circular
+    >
     <!-- Uploaded image -->
-    <img v-if="imgPublicId" :src="imgSrc">
+    <img v-if="imgPublicId" :src="imgSrc" />
     <!-- Delete button -->
     <div v-if="imgPublicId">
-      <v-btn class="ma-0" dark small color="error" @click="deleteImage()">{{ deleteText }}</v-btn>
+      <v-btn class="ma-0" dark small color="error" @click="deleteImage()">{{
+        deleteText
+      }}</v-btn>
     </div>
   </div>
 </template>
@@ -47,68 +50,68 @@ export default {
   props: {
     // v-model
     value: {
-      type: String,
+      type: String
     },
     // Cloudinary upload preset
     uploadPreset: {
       type: String,
-      required: true,
+      required: true
     },
     // Cloudinary cloud name
     cloudName: {
       type: String,
-      required: true,
+      required: true
     },
     // Image transformations
     transformation: {
       type: String,
-      default: 'w_120,h_120,c_fill,g_auto,q_auto,f_auto',
+      default: "w_120,h_120,c_fill,g_auto,q_auto,f_auto"
     },
     // Upload button color (default = gray)
     buttonColor: {
       type: String,
-      default: '',
+      default: ""
     },
     // Upload button dark variant (makes text white)
     buttonDark: {
       type: Boolean,
-      default: false,
+      default: false
     },
     // Upload button icon on the right
     buttonIcon: {
       type: String,
-      default: 'Sync with the cloud',
+      default: "Sync with the cloud"
     },
     // Upload button text
     buttonText: {
       type: String,
-      default: 'Add image',
+      default: "Add image"
     },
     // Delete button text
     deleteText: {
       type: String,
-      default: 'Delete',
+      default: "Delete"
     },
     // Size of the circular progress indicator
     progressSize: {
       type: Number,
-      default: 100,
+      default: 100
     },
     // Stroke size of the circular progress indicator
     progressStroke: {
       type: Number,
-      default: 15,
+      default: 15
     },
     // Color of the circular progress indicator
     progressColor: {
       type: String,
-      default: 'pink',
-    },
+      default: "pink"
+    }
   },
   data() {
     return {
       uploading: null,
-      progress: 0,
+      progress: 0
     };
   },
   computed: {
@@ -119,7 +122,7 @@ export default {
       },
       set: function(val) {
         return val;
-      },
+      }
     },
     // Full image src, with transformation
     imgSrc: {
@@ -129,18 +132,16 @@ export default {
       //   }/${this.imgPublicId}`;
       // },
       get: function() {
-        return `https://res.cloudinary.com/${this.cloudName}/image/upload/${
-          this.imgPublicId
-        }`;
+        return `https://res.cloudinary.com/${this.cloudName}/image/upload/${this.imgPublicId}`;
       },
       set: function(val) {
         return val;
-      },
+      }
     },
     // The url to POST the image to, based on cloudname
     apiEndpoint() {
       return `https://api.cloudinary.com/v1_1/${this.cloudName}/upload`;
-    },
+    }
   },
   methods: {
     // Triggers the click on the input file
@@ -156,12 +157,12 @@ export default {
           // Prepare the FormData to send to cloudinary
           const file = files.item(i);
           let formdata = new FormData();
-          formdata.append('file', file);
-          formdata.append('upload_preset', this.uploadPreset);
+          formdata.append("file", file);
+          formdata.append("upload_preset", this.uploadPreset);
           let xhr = new XMLHttpRequest();
           // Progress
           xhr.upload.addEventListener(
-            'progress',
+            "progress",
             e => {
               let total = e.total;
               let loaded = e.loaded;
@@ -171,7 +172,7 @@ export default {
           );
           // Upload has finished
           xhr.addEventListener(
-            'load',
+            "load",
             e => {
               let response = e.target;
               this.uploading = false;
@@ -180,44 +181,44 @@ export default {
               formdata = null;
               if (response.status !== 200) {
                 // success
-                console.log('Image upload error', response.responseText);
-                this.$emit('error', response.responseText);
+                console.log("Image upload error", response.responseText);
+                this.$emit("error", response.responseText);
               } else {
                 // failure
                 let uploaded = JSON.parse(response.responseText);
                 this.imgPublicId = uploaded.public_id;
-                this.$emit('input', uploaded.public_id);
+                this.$emit("input", uploaded.public_id);
               }
             },
             false
           );
           // Upload error
           xhr.addEventListener(
-            'error',
+            "error",
             e => {
-              console.log('Image upload error', e);
-              this.$emit('error', e);
+              console.log("Image upload error", e);
+              this.$emit("error", e);
             },
             false
           );
-          xhr.open('POST', this.apiEndpoint);
+          xhr.open("POST", this.apiEndpoint);
           xhr.send(formdata);
         }
       }
     },
     deleteImage() {
-      this.$emit('delete', this.imgPublicId);
-      this.$emit('input');
+      this.$emit("delete", this.imgPublicId);
+      this.$emit("input");
       this.imgPublicId = null;
-    },
-  },
+    }
+  }
 };
 </script>
 
 <style scoped>
 /* visually hides the input file */
 
-input[type='file'] {
+input[type="file"] {
   position: absolute;
   clip: rect(0, 0, 0, 0);
 }

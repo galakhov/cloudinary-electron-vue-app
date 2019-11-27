@@ -11,7 +11,11 @@
       Upload files
     </button>-->
 
-    <uppy-cloudinary-uploader @uploaded="uploadCompleted" preset="tm4w6luq" cloudName="rootless"></uppy-cloudinary-uploader>
+    <uppy-cloudinary-uploader
+      @uploaded="uploadCompleted"
+      preset="tm4w6luq"
+      cloudName="rootless"
+    ></uppy-cloudinary-uploader>
   </div>
 </template>
 
