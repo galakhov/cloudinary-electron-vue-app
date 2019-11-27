@@ -175,7 +175,7 @@ export default {
 .uploader {
   text-decoration: none;
   color: #fff;
-  background-color: #26a69a;
+  background-color: cyan;
   text-align: center;
   letter-spacing: 0.5px;
   -webkit-transition: 0.2s ease-out;
