@@ -201,12 +201,8 @@ export default {
     },
     // Uploads a single file
     uploadFile(file) {
-      console.log("file.meta", file.meta);
-
       // ----------------------------------------------------
-      // This code below tracks the progress of an upload correctly, however responds with 400 after the uploading is finished for some reason:
-      // TODO: try fetch/then instead of xhr:
-      // https://github.com/cloudinary/cloudinary_js/issues/93#issuecomment-337125702
+      // Fixed: [x] This code below tracks the progress of an upload correctly, however responds with 400 after the uploading is finished for some reason:
       // ----------------------------------------------------
 
       const opts = this.getOptions(file);
@@ -390,103 +386,37 @@ export default {
       //     reject(new Error("Upload cancelled"));
       //   });
       // });
-
-      // ----------------------------------------------------
-
-      // const formPost = new FormData();
-      // formPost.append("file", file.data);
-      // formPost.append("upload_preset", this.preset);
-      // formPost.append("tags", this.tags);
-
-      // console.log("formPost: ", formPost);
-
-      // const xhr = new XMLHttpRequest();
-
-      // xhr.upload.addEventListener("loadstart", () => {
-      //   this.uppy.emit("upload-started", file.id);
-      // });
-
-      // xhr.addEventListener("load", ev => {
-      //   if (ev.target.status === 200) {
-      //     this.$emit("uploaded", JSON.parse(ev.target.response));
-      //     this.uppy.emit("upload-success", file.id);
-      //   } else {
-      //     this.uppy.emit(
-      //       "upload-error",
-      //       file.id,
-      //       new Error("Failed to upload")
-      //     );
-      //   }
-      // });
-
-      // xhr.addEventListener("error", () => {
-      //   this.uppy.emit("upload-error", file.id, new Error("Failed to upload"));
-      // });
-
-      // xhr.upload.addEventListener("progress", ev => {
-      //   // timer.progress();
-
-      //   if (!ev.lengthComputable) return;
-
-      //   this.uppy.emit("upload-progress", file, {
-      //     uploader: this,
-      //     id: file.id,
-      //     bytesUploaded: (ev.loaded / ev.total) * file.size,
-      //     bytesTotal: file.size
-      //   });
-      // });
-
-      // if (file.type.startsWith("video")) {
-      //   xhr.open("POST", `${BASE_URL}${this.cloudName}${VIDEO_POSTFIX}`);
-      // } else {
-      //   xhr.open("POST", `${BASE_URL}${this.cloudName}${IMAGE_POSTFIX}`);
-      // }
-
-      // xhr.send(formPost);
       // ----------------------------------------------------
     },
     // Create an instance of Uppy.io
     createUppyInstance() {
-      return (
-        Uppy({
-          autoProceed: this.autoProceed,
-          restrictions: {
-            maxFileSize: this.maxFileSize,
-            maxNumberOfFiles: this.maxNumberOfFiles,
-            minNumberOfFiles: this.minNumberOfFiles,
-            allowedFileTypes: this.allowedFileTypes
-          }
+      return Uppy({
+        autoProceed: this.autoProceed,
+        restrictions: {
+          maxFileSize: this.maxFileSize,
+          maxNumberOfFiles: this.maxNumberOfFiles,
+          minNumberOfFiles: this.minNumberOfFiles,
+          allowedFileTypes: this.allowedFileTypes
+        }
+      })
+        .use(Dashboard, {
+          // target: "body",
+          showProgressDetails: this.showProgressDetails,
+          closeModalOnClickOutside: this.closeModalOnClickOutside
         })
-          .use(Dashboard, {
-            // target: "body",
-            showProgressDetails: this.showProgressDetails,
-            closeModalOnClickOutside: this.closeModalOnClickOutside
-          })
-          .use(XHRUpload, {
-            endpoint: "https://api.cloudinary.com/v1_1/rootless/upload",
-            formData: true,
-            method: "post",
-            headers: {
-              "X-Requested-With": "XMLHttpRequest"
-            },
-            withCredentials: false,
-            metaFields: ["file", "name", "upload_preset"]
-          })
-          .use(ProgressBar, {
-            // Options
-          })
-          .use(StatusBar, {
-            // Options
-          })
-          // .use(Informer, {
-          //   // Options
-          // })
-          // .use(Webcam, {
-          //   target: Dashboard,
-          // })
-          // .setMeta({ upload_preset: this.preset })
-          .run()
-      );
+        .use(XHRUpload, {
+          endpoint: "https://api.cloudinary.com/v1_1/rootless/upload",
+          formData: true,
+          method: "post",
+          headers: {
+            "X-Requested-With": "XMLHttpRequest"
+          },
+          withCredentials: false,
+          metaFields: ["file", "name", "upload_preset"]
+        })
+        .use(ProgressBar, {})
+        .use(StatusBar, {})
+        .run();
     },
     // Complete handler for Uppy
     completeHandler(result) {
