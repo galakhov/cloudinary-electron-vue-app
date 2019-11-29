@@ -33,12 +33,12 @@ const BASE_URL = "https://api.cloudinary.com/v1_1/";
 const IMAGE_POSTFIX = "/image/upload"; // /v1442506910
 const VIDEO_POSTFIX = "/video/upload";
 const uploaderEvents = Object.create(null);
-const requests = new RateLimitedQueue(0);
+const requests = new RateLimitedQueue(10);
 const global_opts = {
   formData: true,
-  fieldName: "files[]",
+  // fieldName: "files[]",
   method: "post",
-  // metaFields: null,
+  metaFields: null,
   responseUrlFieldName: "url",
   bundle: false,
   headers: {
@@ -104,7 +104,7 @@ export default {
     allowedFileTypes: {
       type: Array,
       default() {
-        return ["image/*", "video/*", "text/*"];
+        return ["image/jpeg", "image/png", "image/*"];
       }
     },
     tags: {
@@ -156,15 +156,9 @@ export default {
       return opts;
     },
     validateStatus(status, responseText, response) {
-      console.log("validateStatus -> status", status);
-      console.log("validateStatus -> responseText", responseText);
-      console.log("validateStatus -> response", response);
       return status >= 200 && status < 300;
     },
     getResponseData(responseText, response) {
-      console.log("getResponseData -> responseText", responseText);
-      console.log("getResponseData -> response", response);
-
       let parsedResponse = {};
       try {
         parsedResponse = JSON.parse(responseText);
@@ -175,39 +169,12 @@ export default {
       return parsedResponse;
     },
     getResponseError(responseText, response) {
-      console.log("getResponseError -> responseText", responseText);
-      console.log("getResponseError -> response", response);
-
       return new Error("Upload error");
     },
     createBareUpload(file, opts) {
       return file.data;
     },
-    addMetadata(formData, meta, opts) {
-      const metaFields = Array.isArray(opts.metaFields)
-        ? opts.metaFields
-        : // Send along all fields by default.
-          Object.keys(meta);
-
-      metaFields.forEach(item => {
-        formData.append(item, meta[item]);
-      });
-    },
-    // createFormDataUpload(file, opts) {
-    //   const formPost = new FormData();
-
-    //   this.addMetadata(formPost, file.meta, opts);
-
-    //   const dataWithUpdatedType = setTypeInBlob(file);
-
-    //   if (file.name) {
-    //     formPost.append(opts.fieldName, dataWithUpdatedType, file.meta.name);
-    //   } else {
-    //     formPost.append(opts.fieldName, dataWithUpdatedType);
-    //   }
-
-    //   return formPost;
-    // },
+    // the addMetadata(formData, meta, opts) {...} function together with the setTypeInBlob() function caused the 400 error
     onFileRemove(fileID, cb) {
       uploaderEvents[fileID].on("file-removed", file => {
         if (fileID === file.id) cb(file.id);
@@ -238,221 +205,245 @@ export default {
 
       // ----------------------------------------------------
       // This code below tracks the progress of an upload correctly, however responds with 400 after the uploading is finished for some reason:
+      // TODO: try fetch/then instead of xhr:
+      // https://github.com/cloudinary/cloudinary_js/issues/93#issuecomment-337125702
       // ----------------------------------------------------
-      // const opts = this.getOptions(file);
-      // // console.log(`uploading ${current} of ${total}`);
 
-      // // return new Promise((resolve, reject) => {
-      // this.uppy.emit("upload-started", file);
+      const opts = this.getOptions(file);
+      console.log("uploadFile -> opts from file: ", opts);
+      // console.log(`uploading ${current} of ${total}`);
 
-      // // const data = opts.formData
-      // //   ? this.createFormDataUpload(file, opts)
-      // //   : this.createBareUpload(file, opts);
-      // const formPost = new FormData();
-      // this.addMetadata(formPost, file.meta, opts);
-      // // formPost.append("file", file.data);
-      // formPost.append("file", file.data);
-      // formPost.append("upload_preset", this.preset);
-      // formPost.append("tags", this.tags);
+      // return new Promise((resolve, reject) => {
+      //   this.uppy.emit("upload-started", file);
 
-      // // const dataWithUpdatedType = setTypeInBlob(file);
+      //   // const data = opts.formData
+      //   //   ? this.createFormDataUpload(file, opts)
+      //   //   : this.createBareUpload(file, opts);
 
-      // // if (file.name) {
-      // //   formPost.append(opts.fieldName, dataWithUpdatedType, file.meta.name);
-      // // }
-      // const formData = formPost; // this.createBareUpload(file, opts);
-      // console.log("data: ", formData);
+      //   const formPost = new FormData();
+      //   // this.addMetadata(formPost, file.meta, opts);
+      //   // formPost.append("file", file.data);
+      //   formPost.append("file", file.data);
+      //   formPost.append("upload_preset", this.preset);
+      //   formPost.append("tags", this.tags);
 
-      // const xhr = new XMLHttpRequest();
+      //   // const dataWithUpdatedType = setTypeInBlob(file);
 
-      // const timer = new ProgressTimeout(opts.timeout, () => {
-      //   xhr.abort();
-      //   const error = new Error(
-      //     this.i18n("timedOut", { seconds: Math.ceil(opts.timeout / 1000) })
-      //   );
-      //   this.uppy.emit("upload-error", file, error);
-      //   console.error(error);
-      //   // reject(error);
-      // });
+      //   // if (file.name) {
+      //   //   formPost.append(opts.fieldName, dataWithUpdatedType, file.meta.name);
+      //   // }
 
-      // uploaderEvents[file.id] = new EventTracker(this.uppy);
+      //   let formData = formPost; // this.createBareUpload(file, opts);
+      //   console.log("data: ", formData);
 
-      // // const id = cuid();
+      //   const xhr = new XMLHttpRequest();
 
-      // xhr.upload.addEventListener("loadstart", ev => {
-      //   this.uppy.log(`[XHRUpload] started`);
-      // });
+      //   const timer = new ProgressTimeout(opts.timeout, () => {
+      //     xhr.abort();
+      //     const error = new Error(
+      //       this.i18n("timedOut", { seconds: Math.ceil(opts.timeout / 1000) })
+      //     );
+      //     this.uppy.emit("upload-error", file, error);
+      //     console.error(error);
+      //     reject(error);
+      //   });
 
-      // xhr.upload.addEventListener("progress", ev => {
-      //   this.uppy.log(`[XHRUpload] progress: ${ev.loaded} / ${ev.total}`);
-      //   // Begin checking for timeouts when progress starts, instead of loading,
-      //   // to avoid timing out requests on browser concurrency queue
-      //   timer.progress();
+      //   uploaderEvents[file.id] = new EventTracker(this.uppy);
 
-      //   if (ev.lengthComputable) {
-      //     this.uppy.emit("upload-progress", file, {
-      //       uploader: this,
-      //       bytesUploaded: ev.loaded,
-      //       bytesTotal: ev.total
-      //     });
-      //   }
-      // });
+      //   // const id = cuid();
 
-      // xhr.addEventListener("load", ev => {
-      //   this.uppy.log(`[XHRUpload] finished`);
-      //   timer.done();
-      //   queuedRequest.done();
-      //   if (uploaderEvents[file.id]) {
-      //     uploaderEvents[file.id].remove();
-      //     uploaderEvents[file.id] = null;
-      //   }
+      //   xhr.upload.addEventListener("loadstart", ev => {
+      //     this.uppy.log(`[XHRUpload] started`);
+      //     console.log("[XHRUpload] started");
+      //   });
 
-      //   if (this.validateStatus(ev.target.status, xhr.responseText, xhr)) {
-      //     console.log("actually the 1st response check goes through");
-      //     // this.$emit("uploaded", JSON.parse(ev.target.response));
+      //   xhr.upload.addEventListener("progress", ev => {
+      //     this.uppy.log(`[XHRUpload] progress: ${ev.loaded} / ${ev.total}`);
+      //     // Begin checking for timeouts when progress starts, instead of loading,
+      //     // to avoid timing out requests on browser concurrency queue
+      //     timer.progress();
+
+      //     if (ev.lengthComputable) {
+      //       this.uppy.emit("upload-progress", file, {
+      //         uploader: this,
+      //         bytesUploaded: ev.loaded,
+      //         bytesTotal: ev.total
+      //       });
+      //     }
+      //   });
+
+      //   xhr.addEventListener("load", ev => {
+      //     this.uppy.log(`[XHRUpload] finished`);
+      //     timer.done();
+      //     queuedRequest.done();
+      //     if (uploaderEvents[file.id]) {
+      //       uploaderEvents[file.id].remove();
+      //       uploaderEvents[file.id] = null;
+      //     }
+
+      //     formData = null;
+
+      //     console.log(
+      //       "before validateStatus the current ev.target.status is: ",
+      //       ev.target.status
+      //     );
       //     console.log(
       //       "'load' -> JSON.parse(ev.target.response)",
       //       JSON.parse(ev.target.response)
       //     );
 
-      //     const body = this.getResponseData(xhr.responseText, xhr);
-      //     const uploadURL = body[opts.responseUrlFieldName];
+      //     // if (this.validateStatus(ev.target.status, xhr.responseText, xhr)) {
+      //     if (
+      //       this.validateStatus(
+      //         ev.target.status,
+      //         JSON.parse(ev.target.response),
+      //         xhr
+      //       )
+      //     ) {
+      //       const body = this.getResponseData(xhr.responseText, xhr);
+      //       const uploadURL = body[global_opts.responseUrlFieldName];
 
-      //     const uploadResp = {
-      //       status: ev.target.status,
-      //       body,
-      //       uploadURL
-      //     };
+      //       const uploadResp = {
+      //         status: ev.target.status,
+      //         body,
+      //         uploadURL
+      //       };
+      //       console.log("uploadResp Object: ", uploadResp);
 
-      //     this.uppy.emit("upload-success", file, uploadResp);
+      //       this.$emit("uploaded", JSON.parse(ev.target.response));
+      //       this.uppy.emit("upload-success", file, uploadResp);
 
-      //     if (uploadURL) {
-      //       this.uppy.log(`Download ${file.name} from ${uploadURL}`);
-      //       console.log(`Download ${file.name} from ${uploadURL}`);
+      //       if (uploadURL) {
+      //         this.uppy.log(`Download ${file.name} from ${uploadURL}`);
+      //         console.log(`Download ${file.name} from ${uploadURL}`);
+      //       }
+
+      //       return resolve(file);
+      //     } else {
+      //       const body = this.getResponseData(xhr.responseText, xhr);
+      //       const error = buildResponseError(
+      //         xhr,
+      //         this.getResponseError(xhr.responseText, xhr)
+      //       );
+
+      //       const response = {
+      //         status: ev.target.status,
+      //         body
+      //       };
+      //       console.log("ev.target.status: ", ev.target.status);
+      //       console.log("ev -> body", body);
+
+      //       this.uppy.emit("upload-error", file, error, response);
+      //       console.error(error);
+      //       return reject(error);
+      //     }
+      //   });
+
+      //   xhr.addEventListener("error", ev => {
+      //     this.uppy.log(`[XHRUpload] errored`);
+      //     timer.done();
+      //     queuedRequest.done();
+      //     if (uploaderEvents[file.id]) {
+      //       uploaderEvents[file.id].remove();
+      //       uploaderEvents[file.id] = null;
       //     }
 
-      //     // return resolve(file);
-      //   } else {
-      //     const body = this.getResponseData(xhr.responseText, xhr);
       //     const error = buildResponseError(
       //       xhr,
       //       this.getResponseError(xhr.responseText, xhr)
       //     );
-
-      //     const response = {
-      //       status: ev.target.status,
-      //       body
-      //     };
-
-      //     this.uppy.emit("upload-error", file, error, response);
+      //     this.uppy.emit("upload-error", file, error);
       //     console.error(error);
-      //     // return reject(error);
-      //   }
-      // });
+      //     return reject(error);
+      //   });
 
-      // xhr.addEventListener("error", ev => {
-      //   this.uppy.log(`[XHRUpload] errored`);
-      //   timer.done();
-      //   queuedRequest.done();
-      //   if (uploaderEvents[file.id]) {
-      //     uploaderEvents[file.id].remove();
-      //     uploaderEvents[file.id] = null;
+      //   xhr.open(global_opts.method.toUpperCase(), global_opts.endpoint);
+      //   // IE10 does not allow setting `withCredentials` and `responseType`
+      //   // before `open()` is called.
+      //   xhr.withCredentials = global_opts.withCredentials;
+      //   if (global_opts.responseType !== "") {
+      //     xhr.responseType = global_opts.responseType;
       //   }
 
-      //   const error = buildResponseError(
-      //     xhr,
-      //     this.getResponseError(xhr.responseText, xhr)
-      //   );
-      //   this.uppy.emit("upload-error", file, error);
-      //   console.error(error);
-      //   // return reject(error);
-      // });
-
-      // xhr.open(global_opts.method.toUpperCase(), global_opts.endpoint);
-      // // IE10 does not allow setting `withCredentials` and `responseType`
-      // // before `open()` is called.
-      // xhr.withCredentials = global_opts.withCredentials;
-      // if (global_opts.responseType !== "") {
-      //   xhr.responseType = global_opts.responseType;
-      // }
-
-      // // Object.keys(opts.headers).forEach(header => {
-      // //   xhr.setRequestHeader(header, opts.headers[header]);
-      // // });
-
-      // const queuedRequest = requests.run(() => {
       //   xhr.send(formData);
-      //   return () => {
-      //     timer.done();
-      //     xhr.abort();
-      //   };
-      // });
 
-      // this.onFileRemove(file.id, () => {
-      //   queuedRequest.abort();
-      //   console.error("File removed");
-      //   // reject(new Error("File removed"));
-      // });
+      //   // Object.keys(opts.headers).forEach(header => {
+      //   //   xhr.setRequestHeader(header, opts.headers[header]);
+      //   // });
 
-      // this.onCancelAll(file.id, () => {
-      //   queuedRequest.abort();
-      //   console.error("Upload cancelled");
-      //   // reject(new Error("Upload cancelled"));
-      // });
+      //   const queuedRequest = requests.run(() => {
+      //     return () => {
+      //       timer.done();
+      //       xhr.abort();
+      //     };
+      //   });
+
+      //   this.onFileRemove(file.id, () => {
+      //     queuedRequest.abort();
+      //     console.error("File removed");
+      //     reject(new Error("File removed"));
+      //   });
+
+      //   this.onCancelAll(file.id, () => {
+      //     queuedRequest.abort();
+      //     console.error("Upload cancelled");
+      //     reject(new Error("Upload cancelled"));
+      //   });
       // });
 
       // ----------------------------------------------------
 
-      const formPost = new FormData();
-      formPost.append("file", file.data);
-      formPost.append("upload_preset", this.preset);
-      formPost.append("tags", this.tags);
+      // const formPost = new FormData();
+      // formPost.append("file", file.data);
+      // formPost.append("upload_preset", this.preset);
+      // formPost.append("tags", this.tags);
 
-      console.log("formPost: ", formPost);
+      // console.log("formPost: ", formPost);
 
-      const xhr = new XMLHttpRequest();
+      // const xhr = new XMLHttpRequest();
 
-      xhr.upload.addEventListener("loadstart", () => {
-        this.uppy.emit("upload-started", file.id);
-      });
+      // xhr.upload.addEventListener("loadstart", () => {
+      //   this.uppy.emit("upload-started", file.id);
+      // });
 
-      xhr.addEventListener("load", ev => {
-        if (ev.target.status === 200) {
-          this.$emit("uploaded", JSON.parse(ev.target.response));
-          this.uppy.emit("upload-success", file.id);
-        } else {
-          this.uppy.emit(
-            "upload-error",
-            file.id,
-            new Error("Failed to upload")
-          );
-        }
-      });
+      // xhr.addEventListener("load", ev => {
+      //   if (ev.target.status === 200) {
+      //     this.$emit("uploaded", JSON.parse(ev.target.response));
+      //     this.uppy.emit("upload-success", file.id);
+      //   } else {
+      //     this.uppy.emit(
+      //       "upload-error",
+      //       file.id,
+      //       new Error("Failed to upload")
+      //     );
+      //   }
+      // });
 
-      xhr.addEventListener("error", () => {
-        this.uppy.emit("upload-error", file.id, new Error("Failed to upload"));
-      });
+      // xhr.addEventListener("error", () => {
+      //   this.uppy.emit("upload-error", file.id, new Error("Failed to upload"));
+      // });
 
-      xhr.upload.addEventListener("progress", ev => {
-        // timer.progress();
+      // xhr.upload.addEventListener("progress", ev => {
+      //   // timer.progress();
 
-        if (!ev.lengthComputable) return;
+      //   if (!ev.lengthComputable) return;
 
-        this.uppy.emit("upload-progress", file, {
-          uploader: this,
-          id: file.id,
-          bytesUploaded: (ev.loaded / ev.total) * file.size,
-          bytesTotal: file.size
-        });
-      });
+      //   this.uppy.emit("upload-progress", file, {
+      //     uploader: this,
+      //     id: file.id,
+      //     bytesUploaded: (ev.loaded / ev.total) * file.size,
+      //     bytesTotal: file.size
+      //   });
+      // });
 
-      if (file.type.startsWith("video")) {
-        xhr.open("POST", `${BASE_URL}${this.cloudName}${VIDEO_POSTFIX}`);
-      } else {
-        xhr.open("POST", `${BASE_URL}${this.cloudName}${IMAGE_POSTFIX}`);
-      }
+      // if (file.type.startsWith("video")) {
+      //   xhr.open("POST", `${BASE_URL}${this.cloudName}${VIDEO_POSTFIX}`);
+      // } else {
+      //   xhr.open("POST", `${BASE_URL}${this.cloudName}${IMAGE_POSTFIX}`);
+      // }
 
-      xhr.send(formPost);
+      // xhr.send(formPost);
+      // ----------------------------------------------------
     },
     // Create an instance of Uppy.io
     createUppyInstance() {
@@ -467,30 +458,29 @@ export default {
           }
         })
           .use(Dashboard, {
-            target: "body",
+            // target: "body",
             showProgressDetails: this.showProgressDetails,
             closeModalOnClickOutside: this.closeModalOnClickOutside
           })
-          // .use(XHRUpload, {
-          //   endpoint: "https://api.cloudinary.com/v1_1/rootless/upload",
-          //   formData: true,
-          //   method: "post",
-          //   headers: {
-          //     "X-CSRF-TOKEN": window.csrfToken
-          //   },
-          //   // withCredentials: true,
-          //   metaFields: { upload_preset: this.preset }
-          //   //'https://api2.transloadit.com'
-          // })
+          .use(XHRUpload, {
+            endpoint: "https://api.cloudinary.com/v1_1/rootless/upload",
+            formData: true,
+            method: "post",
+            headers: {
+              "X-Requested-With": "XMLHttpRequest"
+            },
+            withCredentials: false,
+            metaFields: ["file", "name", "upload_preset"]
+          })
           .use(ProgressBar, {
             // Options
           })
           .use(StatusBar, {
             // Options
           })
-          .use(Informer, {
-            // Options
-          })
+          // .use(Informer, {
+          //   // Options
+          // })
           // .use(Webcam, {
           //   target: Dashboard,
           // })
@@ -508,17 +498,12 @@ export default {
   },
   mounted() {
     this.uppy = this.createUppyInstance();
-    // this.uppy.on("file-added", file => {
-    //   uppy.setFileMeta(file.id, {
-    //     upload_preset: this.preset
-    //   });
-    // });
     this.uppy.on("file-added", file => {
       console.log("Added file", file);
-      // this.uppy.setFileMeta(file.id, {
-      //   upload_preset: this.preset
-      // });
-      // upload_preset: this.preset
+      this.uppy.setFileMeta(file.id, {
+        file: file.data,
+        upload_preset: this.preset
+      });
     });
     this.uppy.on("complete", this.completeHandler);
   },
