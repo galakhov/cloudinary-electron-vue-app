@@ -58,7 +58,7 @@ this.uppy.on("file-added", file => {
 });
 ```
 
-[@uppy/XHR-Upload: The cloudinary endpoint always responds with POST 400 error by trying to upload with the default image/jpeg type (or any other image type: image/\*)](https://github.com/transloadit/uppy/issues/1964).
+Issue was reported to @uppy/XHR-Upload as "[The cloudinary endpoint always responds with POST 400 error by trying to upload with the default image/jpeg type (or any other image type: image/\*)](https://github.com/transloadit/uppy/issues/1964)".
 
 The complete error message is as follows: "**X-Cld-Error: Type image/jpeg is not a valid type directive**".
 
