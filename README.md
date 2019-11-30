@@ -34,6 +34,30 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 
 ### Related issues
 
+It is mentioned in the documentation that one can [limit the metadata fields that will be sent to the endpoint as form fields by passing over an array of required field names](https://uppy.io/docs/xhr-upload/#metaFields-null), however, I haven't found any use-cases, reasons, notes or any hints on when to do it.
+
+The issue I have faced with the Cloudinary endpoint ("**X-Cld-Error: Type image/jpeg is not a valid type directive**") is one of such use-cases and yet there could be more of them.
+
+It would be more appropriate not to include "type: image/jpeg" (or whatever type of a file it is) as the default meta field or at least to **list all the default meta fields somewhere in the documentation**.
+
+```JavaScript
+Uppy({...})
+    .use(XHRUpload, {
+        endpoint: "https://api.cloudinary.com/v1_1/[your-cloud-name]/upload",
+        formData: true,
+        metaFields: ["file", "name", "upload_preset"]
+    })
+
+// (...)
+
+this.uppy.on("file-added", file => {
+    this.uppy.setFileMeta(file.id, {
+        file: file.data,
+        upload_preset: this.cloudinaryPreset
+    });
+});
+```
+
 [@uppy/XHR-Upload: The cloudinary endpoint always responds with POST 400 error by trying to upload with the default image/jpeg type (or any other image type: image/\*)](https://github.com/transloadit/uppy/issues/1964).
 
 The complete error message is as follows: "**X-Cld-Error: Type image/jpeg is not a valid type directive**".
